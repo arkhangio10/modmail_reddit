@@ -14,6 +14,7 @@ import {
   type InitResponse,
 } from "../shared/api.ts";
 import { once } from "node:events";
+import { onModMail } from "./handlers/onModMail.ts";
 
 export async function serverOnRequest(
   req: IncomingMessage,
@@ -57,6 +58,9 @@ async function onRequest(
       break;
     case ApiEndpoint.OnAppInstall:
       body = await onAppInstall();
+      break;
+    case ApiEndpoint.OnModMail:
+      body = await onModMail(req);
       break;
     default:
       endpoint satisfies never;

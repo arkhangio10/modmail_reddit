@@ -31,6 +31,7 @@ export const ApiEndpoint = {
   Decrement: "/api/decrement",
   OnPostCreate: "/internal/menu/post-create",
   OnAppInstall: "/internal/on-app-install",
+  OnModMail: "/internal/on-modmail",
 } as const;
 
 export type ApiEndpoint = (typeof ApiEndpoint)[keyof typeof ApiEndpoint];
