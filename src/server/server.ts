@@ -15,6 +15,7 @@ import {
 } from "../shared/api.ts";
 import { once } from "node:events";
 import { onModMail } from "./handlers/onModMail.ts";
+import { getWeeklyStats, formatStatsPost } from "./analytics.ts";
 
 export async function serverOnRequest(
   req: IncomingMessage,
@@ -61,6 +62,9 @@ async function onRequest(
       break;
     case ApiEndpoint.OnModMail:
       body = await onModMail(req);
+      break;
+    case ApiEndpoint.OnShowStats:
+      body = await onShowStats();
       break;
     default:
       endpoint satisfies never;
@@ -135,6 +139,21 @@ async function onMenuNewPost(): Promise<UiResponse> {
   const post = await reddit.submitCustomPost({ title: context.appName });
   return {
     showToast: { text: `Post ${post.id} created.`, appearance: "success" },
+    navigateTo: post.url,
+  };
+}
+
+async function onShowStats(): Promise<UiResponse> {
+  const sub = context.subredditName ?? "unknown";
+  const days = await getWeeklyStats(sub);
+  const body = formatStatsPost(sub, days);
+  const post = await reddit.submitPost({
+    subredditName: sub,
+    title: `📊 ModMail Copilot — 7-day stats for r/${sub}`,
+    text: body,
+  });
+  return {
+    showToast: { text: "Stats post created!", appearance: "success" },
     navigateTo: post.url,
   };
 }

@@ -14,6 +14,7 @@ import {
   recordSpend,
   setCachedHistory,
 } from "../cache.ts";
+import { recordStats } from "../analytics.ts";
 
 // Real shape verified against a live payload on 2026-05-23.
 // Source of truth: node_modules/@devvit/protos/types/devvit/reddit/v2alpha/modmail.d.ts
@@ -248,6 +249,7 @@ export async function onModMail(req: IncomingMessage): Promise<TriggerResponse> 
   try {
     await incrementRateLimit(subredditName);
     await recordSpend(subredditName);
+    await recordStats(subredditName, result.classification, result.severity);
   } catch (err) {
     console.error("[cache] usage recording failed:", err);
   }

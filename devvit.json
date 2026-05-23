@@ -25,6 +25,13 @@
         "location": "subreddit",
         "forUserType": "moderator",
         "endpoint": "/internal/menu/post-create"
+      },
+      {
+        "label": "📊 ModMail Copilot stats",
+        "description": "Create a post with 7-day modmail analysis stats for this subreddit",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/show-stats"
       }
     ]
   },
