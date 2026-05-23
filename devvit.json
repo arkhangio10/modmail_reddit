@@ -36,6 +36,26 @@
     "dev": "node --experimental-strip-types ./tools/build.ts --watch",
     "build": "node --experimental-strip-types ./tools/build.ts --minify"
   },
+  "permissions": {
+    "http": {
+      "enable": true,
+      "domains": ["api.anthropic.com"]
+    },
+    "reddit": {
+      "enable": true,
+      "scope": "moderator"
+    }
+  },
+  "settings": {
+    "global": {
+      "anthropic-api-key": {
+        "type": "string",
+        "label": "Anthropic API key",
+        "helpText": "Your Anthropic API key (sk-ant-...). Set once via `devvit settings set anthropic-api-key`. Required for AI features. Treated as a secret.",
+        "isSecret": true
+      }
+    }
+  },
   "dev": {
     "subreddit": "arkhan_modmail_dev"
   }
