@@ -252,5 +252,26 @@ export async function onModMail(req: IncomingMessage): Promise<TriggerResponse> 
     result.confidence,
   );
 
+  // Mod Shield — active escalation: ping the full mod team on high-severity or abusive messages.
+  if (result.isAbusive || result.severity === "high") {
+    try {
+      const sevLabel = result.isAbusive ? "abusive message" : "high-severity modmail";
+      await reddit.modMail.createModNotification({
+        subredditId: context.subredditId,
+        subject: `🛡️ Mod Shield alert — ${sevLabel} from u/${authorName}`,
+        bodyMarkdown: [
+          `**ModMail Copilot** detected a ${sevLabel} in [conversation ${conversationId}](https://mod.reddit.com/mail/all/${conversationId}).`,
+          "",
+          `**Classification:** \`${result.classification}\` | **Severity:** ${result.severity}`,
+          "",
+          "A private analysis note has been posted in the conversation. Please review.",
+        ].join("\n"),
+      });
+      console.log("[mod-shield] escalation notification sent for", conversationId);
+    } catch (err) {
+      console.error("[mod-shield] createModNotification failed:", err);
+    }
+  }
+
   return {};
 }

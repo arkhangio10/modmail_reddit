@@ -120,7 +120,7 @@ export async function getUserSummary(
     // Posting-hour clustering (bot signal)
     if (postHours.length >= 5) {
       const hourBin: number[] = new Array(24).fill(0);
-      for (const h of postHours) hourBin[h]++;
+      for (const h of postHours) hourBin[h] = (hourBin[h] ?? 0) + 1;
       const maxBin = Math.max(...hourBin);
       const maxHour = hourBin.indexOf(maxBin);
       const clusterRatio = maxBin / postHours.length;

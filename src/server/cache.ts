@@ -10,7 +10,7 @@ const HISTORY_TTL_S = 24 * 3600;      // user history cache — 24 hours
 // Stored as integer millicents (×1000) to use incrBy.
 const COST_MILLICENTS = 3; // $0.003 = 3 millicents
 const DEFAULT_RATE_CAP = 50;
-const DEFAULT_BUDGET_MILLICENTS = 1000; // $1.00 = 1000 millicents
+
 
 function nowHourKey(sub: string): string {
   const now = new Date();
@@ -47,7 +47,7 @@ export async function checkAndMarkProcessed(messageId: string): Promise<boolean>
 /** Returns true if the subreddit is over the hourly call cap (caller should skip LLM). */
 export async function isOverRateLimit(
   sub: string,
-  cap = DEFAULT_RATE_CAP,
+  cap: number = DEFAULT_RATE_CAP,
 ): Promise<boolean> {
   const val = await redis.get(nowHourKey(sub));
   return val !== undefined && val !== null && parseInt(val, 10) >= cap;
