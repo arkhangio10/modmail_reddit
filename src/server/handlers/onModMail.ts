@@ -126,13 +126,26 @@ export async function onModMail(req: IncomingMessage): Promise<TriggerResponse> 
     // Continue — better to risk a duplicate note than to silently drop a message.
   }
 
-  // Read API key from app settings (Hard Rule #2: never hardcoded)
+  // Read all settings up front
   let apiKey: string | undefined;
+  let enabled = true;
+  let tone: string | undefined;
+  let rules: string | undefined;
+  let dailyBudgetUsd = 1.0;
   try {
     apiKey = await settings.get<string>("anthropic-api-key");
+    const enabledVal = await settings.get<boolean>("enabled");
+    if (enabledVal === false) enabled = false;
+    tone = (await settings.get<string[]>("tone"))?.[0];
+    rules = await settings.get<string>("rules");
+    const budgetVal = await settings.get<number>("daily-budget-usd");
+    if (typeof budgetVal === "number" && budgetVal > 0) dailyBudgetUsd = budgetVal;
   } catch (err) {
-    console.error("[settings] failed to read anthropic-api-key:", err);
+    console.error("[settings] failed to read settings:", err);
   }
+
+  if (!enabled) return {};
+
   if (!apiKey) {
     await postNote(
       conversationId,
@@ -192,7 +205,7 @@ export async function onModMail(req: IncomingMessage): Promise<TriggerResponse> 
 
   // Hard Rule #7 — daily budget cap ($1.00 default)
   try {
-    if (await isOverBudget(subredditName)) {
+    if (await isOverBudget(subredditName, dailyBudgetUsd)) {
       await postNote(
         conversationId,
         "### 🤖 ModMail Copilot\n\n⚠️ **AI unavailable** (daily budget reached). Please review manually.",
@@ -221,7 +234,7 @@ export async function onModMail(req: IncomingMessage): Promise<TriggerResponse> 
   // Call Claude
   const result = await analyzeModmail(
     apiKey,
-    buildUserPrompt(messages, userHistory),
+    buildUserPrompt(messages, userHistory, tone, rules),
   );
   if (!result) {
     await postNote(

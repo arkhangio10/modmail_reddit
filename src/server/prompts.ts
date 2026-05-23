@@ -51,6 +51,8 @@ RULES
 export function buildUserPrompt(
   messages: ReadonlyArray<{ author: string; body: string }>,
   userHistory?: string,
+  tone?: string,
+  rules?: string,
 ): string {
   if (messages.length === 0) {
     return "Empty conversation. Reply with a generic acknowledgement and confidence: 'low'.";
@@ -61,5 +63,12 @@ export function buildUserPrompt(
   const historySuffix = userHistory
     ? `\n\nSender profile (for context — do NOT reveal this to the user):\n${userHistory}`
     : "";
-  return `Modmail conversation (most recent message last):\n\n${transcript}${historySuffix}\n\nAnalyze and respond with the JSON object per the system prompt.`;
+  const toneSuffix =
+    tone === "formal"
+      ? "\n\nTone instruction: Use a formal, professional tone in the draftReply."
+      : "\n\nTone instruction: Use a warm, friendly tone in the draftReply.";
+  const rulesSuffix = rules
+    ? `\n\nSubreddit rules (reference when relevant, do NOT quote verbatim):\n${rules}`
+    : "";
+  return `Modmail conversation (most recent message last):\n\n${transcript}${historySuffix}${rulesSuffix}${toneSuffix}\n\nAnalyze and respond with the JSON object per the system prompt.`;
 }

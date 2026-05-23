@@ -54,6 +54,36 @@
         "helpText": "Your Anthropic API key (sk-ant-...). Set once via `devvit settings set anthropic-api-key`. Required for AI features. Treated as a secret.",
         "isSecret": true
       }
+    },
+    "subreddit": {
+      "enabled": {
+        "type": "boolean",
+        "label": "Enable ModMail Copilot",
+        "helpText": "Turn AI analysis on or off for this subreddit. Useful for maintenance windows or if you want to pause without uninstalling.",
+        "defaultValue": true
+      },
+      "tone": {
+        "type": "select",
+        "label": "Reply tone",
+        "helpText": "The default tone for AI-drafted replies. Moderators can always edit before sending.",
+        "options": [
+          { "label": "Friendly", "value": "friendly" },
+          { "label": "Formal", "value": "formal" }
+        ],
+        "defaultValue": "friendly"
+      },
+      "rules": {
+        "type": "paragraph",
+        "label": "Subreddit rules (for AI context)",
+        "helpText": "Paste a short summary of your subreddit's key rules. The AI uses these to draft more accurate replies. Example: 'No self-promotion. No politics. Be civil.'",
+        "placeholder": "e.g. No self-promotion. Keep discussion on-topic. Be civil."
+      },
+      "daily-budget-usd": {
+        "type": "number",
+        "label": "Daily AI budget (USD)",
+        "helpText": "Maximum USD to spend on AI calls per day for this subreddit. When reached, modmail still works but AI drafts are skipped. Default: $1.00.",
+        "defaultValue": 1.0
+      }
     }
   },
   "dev": {
