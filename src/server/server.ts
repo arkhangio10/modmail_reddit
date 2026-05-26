@@ -1,19 +1,11 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { context, reddit, redis } from "@devvit/web/server";
+import { context, reddit } from "@devvit/web/server";
 import type {
   PartialJsonValue,
   TriggerResponse,
   UiResponse,
 } from "@devvit/web/shared";
-import {
-  ApiEndpoint,
-  type DecrementRequest,
-  type DecrementResponse,
-  type IncrementRequest,
-  type IncrementResponse,
-  type InitResponse,
-} from "../shared/api.ts";
-import { once } from "node:events";
+import { ApiEndpoint } from "../shared/api.ts";
 import { onModMail } from "./handlers/onModMail.ts";
 import { getWeeklyStats, formatStatsPost } from "./analytics.ts";
 
@@ -43,20 +35,8 @@ async function onRequest(
 
   const endpoint = url as ApiEndpoint;
 
-  let body: ApiResponse | UiResponse | ErrorResponse;
+  let body: UiResponse | TriggerResponse | ErrorResponse;
   switch (endpoint) {
-    case ApiEndpoint.Init:
-      body = await onInit();
-      break;
-    case ApiEndpoint.Increment:
-      body = await onIncrement(req);
-      break;
-    case ApiEndpoint.Decrement:
-      body = await onDecrement(req);
-      break;
-    case ApiEndpoint.OnPostCreate:
-      body = await onMenuNewPost();
-      break;
     case ApiEndpoint.OnAppInstall:
       body = await onAppInstall();
       break;
@@ -75,73 +55,10 @@ async function onRequest(
   writeJSON<PartialJsonValue>("status" in body ? body.status : 200, body, rsp);
 }
 
-type ApiResponse = InitResponse | IncrementResponse | DecrementResponse;
-
 type ErrorResponse = {
   error: string;
   status: number;
 };
-
-function getPostId(): string {
-  if (!context.postId) {
-    throw Error("no post ID");
-  }
-  return context.postId;
-}
-
-function getPostCountKey(postId: string): string {
-  return `count:${postId}`;
-}
-
-async function onInit(): Promise<InitResponse> {
-  const postId = getPostId();
-  const count = Number((await redis.get(getPostCountKey(postId))) ?? 0);
-  return {
-    type: "init",
-    postId,
-    count,
-    username: context.username ?? "user",
-  };
-}
-
-async function onIncrement(req: IncomingMessage): Promise<IncrementResponse> {
-  const postId = getPostId();
-  const { amount } = await readJSON<IncrementRequest>(req).catch(() => ({
-    amount: 1,
-  }));
-  const incrementBy = Number.isFinite(amount) ? amount : 1;
-  const count = await redis.incrBy(getPostCountKey(postId), incrementBy);
-  return {
-    type: "increment",
-    postId,
-    count,
-  };
-}
-
-async function onDecrement(req: IncomingMessage): Promise<DecrementResponse> {
-  const postId = getPostId();
-  const { amount } = await readJSON<DecrementRequest>(req).catch(() => ({
-    amount: 1,
-  }));
-  const parsedAmount = typeof amount === "number" ? amount : Number(amount);
-  const decrementBy = Number.isFinite(parsedAmount) ? parsedAmount : 1;
-  const count = Number(
-    await redis.incrBy(getPostCountKey(postId), -decrementBy),
-  );
-  return {
-    type: "decrement",
-    postId,
-    count,
-  };
-}
-
-async function onMenuNewPost(): Promise<UiResponse> {
-  const post = await reddit.submitCustomPost({ title: context.appName });
-  return {
-    showToast: { text: `Post ${post.id} created.`, appearance: "success" },
-    navigateTo: post.url,
-  };
-}
 
 async function onShowStats(): Promise<UiResponse> {
   const sub = context.subredditName ?? "unknown";
@@ -159,10 +76,6 @@ async function onShowStats(): Promise<UiResponse> {
 }
 
 async function onAppInstall(): Promise<TriggerResponse> {
-  await reddit.submitCustomPost({
-    title: "arkhan-modmail",
-  });
-
   return {};
 }
 
@@ -178,11 +91,4 @@ function writeJSON<T extends PartialJsonValue>(
     "Content-Type": "application/json",
   });
   rsp.end(body);
-}
-
-async function readJSON<T>(req: IncomingMessage): Promise<T> {
-  const chunks: Uint8Array[] = [];
-  req.on("data", (chunk) => chunks.push(chunk));
-  await once(req, "end");
-  return JSON.parse(`${Buffer.concat(chunks)}`);
 }
