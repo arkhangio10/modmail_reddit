@@ -257,7 +257,7 @@ export async function onModMail(req: IncomingMessage): Promise<TriggerResponse> 
   // Post the structured analysis + draft
   await postNote(conversationId, formatNote(result, authorName));
   console.log(
-    "[modmail-reply] posted Claude-drafted note for",
+    "[modmail-reply] posted AI-drafted note for",
     conversationId,
     "| classification:",
     result.classification,
