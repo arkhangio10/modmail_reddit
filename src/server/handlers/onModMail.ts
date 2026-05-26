@@ -134,7 +134,7 @@ export async function onModMail(req: IncomingMessage): Promise<TriggerResponse> 
   let rules: string | undefined;
   let dailyBudgetUsd = 1.0;
   try {
-    apiKey = await settings.get<string>("anthropic-api-key");
+    apiKey = await settings.get<string>("openai-api-key");
     const enabledVal = await settings.get<boolean>("enabled");
     if (enabledVal === false) enabled = false;
     tone = (await settings.get<string[]>("tone"))?.[0];
@@ -155,9 +155,9 @@ export async function onModMail(req: IncomingMessage): Promise<TriggerResponse> 
         "",
         "⚠️ **API key not configured.** A mod with app settings access needs to run:",
         "```",
-        "devvit settings set anthropic-api-key",
+        "devvit settings set openai-api-key",
         "```",
-        "and paste the Anthropic key (`sk-ant-...`). Please review this message manually in the meantime.",
+        "and paste the OpenAI key (`sk-...`). Please review this message manually in the meantime.",
       ].join("\n"),
     );
     return {};

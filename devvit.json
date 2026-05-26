@@ -27,7 +27,7 @@
   "permissions": {
     "http": {
       "enable": true,
-      "domains": ["api.anthropic.com"]
+      "domains": ["api.openai.com"]
     },
     "reddit": {
       "enable": true,
@@ -36,10 +36,10 @@
   },
   "settings": {
     "global": {
-      "anthropic-api-key": {
+      "openai-api-key": {
         "type": "string",
-        "label": "Anthropic API key",
-        "helpText": "Your Anthropic API key (sk-ant-...). Set once via `devvit settings set anthropic-api-key`. Required for AI features. Treated as a secret.",
+        "label": "OpenAI API key",
+        "helpText": "Your OpenAI API key (sk-...). Set once via `devvit settings set openai-api-key`. Required for AI features. Treated as a secret.",
         "isSecret": true
       }
     },

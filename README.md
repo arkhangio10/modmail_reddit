@@ -23,7 +23,7 @@ When a user sends modmail, ModMail Copilot reads the conversation plus the sende
 2. **Mod Shield** — abuse detection + auto-escalation via `createModNotification()` to the full mod team on high-severity messages.
 3. **Multi-language** — Claude detects the user's language and drafts in it. Spanish, French, German, Japanese — no extra config.
 4. **Analytics dashboard** — a subreddit menu item generates a 7-day stats post showing volume by category and severity.
-5. **Safety rails** — per-message idempotency, per-sub hourly rate limit (50/hr default), configurable daily USD budget cap. Cost is ~$0.003 per modmail.
+5. **Safety rails** — per-message idempotency, per-sub hourly rate limit (50/hr default), configurable daily USD budget cap. Cost is ~$0.0006 per modmail (gpt-4o-mini).
 
 ## Crisis handling
 
@@ -36,11 +36,11 @@ Self-harm or suicidal language is **never** auto-handled punitively. The draft p
 - `rules` — paste your subreddit's rules so drafts reference them correctly
 - `daily-budget-usd` — cap, default $1.00
 
-The Anthropic API key is set once globally via `devvit settings set anthropic-api-key`.
+The OpenAI API key is set once globally via `devvit settings set openai-api-key`.
 
 ## Architecture
 
-Built on `@devvit/web` 0.12.24 (Devvit web architecture, Node HTTP server). Triggers and menu items dispatch via `src/server/server.ts`. LLM is Anthropic Claude Haiku 4.5 (`claude-haiku-4-5-20251001`). State is Devvit Redis.
+Built on `@devvit/web` 0.12.24 (Devvit web architecture, Node HTTP server). Triggers and menu items dispatch via `src/server/server.ts`. LLM is OpenAI `gpt-4o-mini-2024-07-18` via the Chat Completions API with `response_format: { type: "json_object" }`. State is Devvit Redis.
 
 ```
 src/server/

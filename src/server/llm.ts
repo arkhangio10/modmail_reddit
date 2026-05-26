@@ -1,12 +1,16 @@
 import { SYSTEM_PROMPT, type LLMResult } from "./prompts.ts";
+// Note on system-prompt JSON marker: OpenAI's response_format: { type: "json_object" }
+// requires the literal word "JSON" to appear in one of the messages. SYSTEM_PROMPT already
+// says "Respond with a single JSON object" so this constraint is satisfied.
 
-const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
-// Pinned per CLAUDE.md Hard Rule #5 — do not use the floating alias.
-const MODEL = "claude-haiku-4-5-20251001";
+const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
+// Pinned per CLAUDE.md Hard Rule #5 — use a dated snapshot, not the floating alias.
+const MODEL = "gpt-4o-mini-2024-07-18";
 const MAX_TOKENS = 800;
 
-type AnthropicResponse = {
-  content?: Array<{ type: string; text?: string }>;
+type OpenAIResponse = {
+  choices?: Array<{ message?: { content?: string } }>;
+  error?: { message?: string; type?: string };
 };
 
 export async function analyzeModmail(
@@ -15,18 +19,21 @@ export async function analyzeModmail(
 ): Promise<LLMResult | null> {
   let responseText: string;
   try {
-    const res = await fetch(ANTHROPIC_URL, {
+    const res = await fetch(OPENAI_URL, {
       method: "POST",
       headers: {
         "content-type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
+        authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model: MODEL,
         max_tokens: MAX_TOKENS,
-        system: SYSTEM_PROMPT,
-        messages: [{ role: "user", content: userPrompt }],
+        // Force JSON output — system prompt already mentions "JSON" so this is valid.
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          { role: "user", content: userPrompt },
+        ],
       }),
     });
     responseText = await res.text();
@@ -35,21 +42,22 @@ export async function analyzeModmail(
     return null;
   }
 
-  let data: AnthropicResponse;
+  let data: OpenAIResponse;
   try {
-    data = JSON.parse(responseText) as AnthropicResponse;
+    data = JSON.parse(responseText) as OpenAIResponse;
   } catch (err) {
     console.error("[llm] response not JSON:", responseText.slice(0, 300));
     return null;
   }
 
-  if ("error" in data) {
-    console.error("[llm] Anthropic error:", JSON.stringify(data).slice(0, 500));
+  if (data.error) {
+    console.error("[llm] OpenAI error:", JSON.stringify(data.error).slice(0, 500));
     return null;
   }
 
-  const text = (data as AnthropicResponse).content?.find((c) => c.type === "text")?.text ?? "";
-  // Defensive JSON extract: find the first {...} block in case the model wrapped it.
+  const text = data.choices?.[0]?.message?.content ?? "";
+  // Defensive JSON extract — response_format guarantees JSON but we still match
+  // the first {...} block in case the model wrapped it.
   const match = text.match(/\{[\s\S]*\}/);
   if (!match) {
     console.error("[llm] no JSON object in model output:", text.slice(0, 300));

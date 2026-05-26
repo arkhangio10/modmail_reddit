@@ -6,9 +6,9 @@ const RATELIMIT_TTL_S = 3600;         // per-hour rate limit — 1 hour
 const BUDGET_TTL_S = 24 * 3600;       // daily budget — 24 hours
 const HISTORY_TTL_S = 24 * 3600;      // user history cache — 24 hours
 
-// ~$0.003 per call (800 input tokens × $0.8/M + 800 output tokens × $4/M, Haiku 4.5 pricing)
-// Stored as integer millicents (×1000) to use incrBy.
-const COST_MILLICENTS = 3; // $0.003 = 3 millicents
+// ~$0.0006 per call (800 input tokens × $0.15/M + 800 output tokens × $0.60/M, gpt-4o-mini pricing).
+// Stored as integer micros (×1,000,000) so sub-millicent precision is preserved.
+const COST_MICROS = 600; // $0.0006 = 600 micros
 const DEFAULT_RATE_CAP = 50;
 
 
@@ -67,16 +67,16 @@ export async function isOverBudget(
   sub: string,
   capUsd = 1.0,
 ): Promise<boolean> {
-  const capMc = Math.round(capUsd * 1000);
+  const capMicros = Math.round(capUsd * 1_000_000);
   const val = await redis.get(todayBudgetKey(sub));
-  return val !== undefined && val !== null && parseInt(val, 10) >= capMc;
+  return val !== undefined && val !== null && parseInt(val, 10) >= capMicros;
 }
 
 /** Records one LLM call's cost; sets 24h TTL on first call today. */
 export async function recordSpend(sub: string): Promise<void> {
   const key = todayBudgetKey(sub);
-  const count = await redis.incrBy(key, COST_MILLICENTS);
-  if (count === COST_MILLICENTS) await redis.expire(key, BUDGET_TTL_S);
+  const count = await redis.incrBy(key, COST_MICROS);
+  if (count === COST_MICROS) await redis.expire(key, BUDGET_TTL_S);
 }
 
 // --- User-history cache ---
