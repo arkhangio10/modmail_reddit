@@ -8,7 +8,7 @@ Reddit's volunteer mods donate millions of hours a year and pay for it with abus
 
 ## What it does
 
-When a user sends modmail, ModMail Copilot reads the conversation plus the sender's Reddit history, asks Claude to analyze it, and posts a **private, mods-only note** in the same thread with:
+When a user sends modmail, ModMail Copilot reads the conversation plus the sender's Reddit history, asks GPT-4o-mini to analyze it, and posts a **private, mods-only note** in the same thread with:
 
 - **Classification** — ban appeal, rule question, harassment, spam, crisis, etc.
 - **Severity flag** — 🟢 low / 🟡 med / 🔴 high
@@ -45,7 +45,7 @@ Built on `@devvit/web` 0.12.24 (Devvit web architecture, Node HTTP server). Trig
 ```
 src/server/
 ├── handlers/onModMail.ts   # main trigger handler
-├── llm.ts                  # Anthropic client with defensive parsing
+├── llm.ts                  # OpenAI client with defensive parsing
 ├── prompts.ts              # system + user prompts
 ├── history.ts              # Reddit-native user signals
 ├── cache.ts                # Redis: idempotency, rate limit, budget, history

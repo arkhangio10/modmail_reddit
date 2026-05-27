@@ -2,5 +2,7 @@ node_modules
 .DS_Store
 dist
 .env
+.env.*
+.devvit
 public/*.js
 public/*.js.map
